@@ -5,15 +5,23 @@ module Counter =
     open Avalonia.FuncUI.DSL
     open Avalonia.Layout
     
-    type State = { count : int }
-    let init = { count = 0 }
+    type State = {
+        realPart : int
+        imaginaryPart: int
+    }
+    let init = {
+        realPart = 0
+        imaginaryPart = 0
+    }
 
-    type Msg = Increment | Decrement | Reset
+    type Msg = IncrementReal | DecrementReal | IncrementImaginary | DecrementImaginary | Reset
 
     let update (msg: Msg) (state: State) : State =
         match msg with
-        | Increment -> { state with count = state.count + 1 }
-        | Decrement -> { state with count = state.count - 1 }
+        | IncrementReal -> { state with realPart = state.realPart + 1 }
+        | DecrementReal -> { state with realPart = state.realPart - 1 }
+        | IncrementImaginary -> { state with imaginaryPart = state.imaginaryPart + 1 }
+        | DecrementImaginary -> { state with imaginaryPart = state.imaginaryPart - 1 }
         | Reset -> init
     
     let view (state: State) (dispatch) =
@@ -23,23 +31,51 @@ module Counter =
                     Button.dock Dock.Bottom
                     Button.onClick (fun _ -> dispatch Reset)
                     Button.content "reset"
-                ]                
-                Button.create [
-                    Button.dock Dock.Bottom
-                    Button.onClick (fun _ -> dispatch Decrement)
-                    Button.content "-"
                 ]
-                Button.create [
-                    Button.dock Dock.Bottom
-                    Button.onClick (fun _ -> dispatch Increment)
-                    Button.content "+"
+                DockPanel.create [
+                    DockPanel.dock Dock.Bottom
+                    DockPanel.children [
+                        Button.create [
+                            Button.dock Dock.Left
+                            Button.width 200.0
+                            Button.horizontalAlignment HorizontalAlignment.Stretch
+                            Button.onClick (fun _ -> dispatch DecrementImaginary)
+                            Button.content "-i"
+                        ]
+                        Button.create [
+                            Button.dock Dock.Right
+                            Button.horizontalAlignment HorizontalAlignment.Stretch
+                            Button.onClick (fun _ -> dispatch IncrementImaginary)
+                            Button.content "+i"
+                        ]
+                    ]
+                ]
+                DockPanel.create [
+                    DockPanel.dock Dock.Bottom
+                    DockPanel.children [
+                        Button.create [
+                            Button.dock Dock.Left
+                            Button.width 200.0
+                            Button.horizontalAlignment HorizontalAlignment.Stretch
+                            Button.onClick (fun _ -> dispatch DecrementReal)
+                            Button.content "-"
+                        ]
+                        Button.create [
+                            Button.dock Dock.Right
+                            Button.horizontalAlignment HorizontalAlignment.Stretch
+                            Button.onClick (fun _ -> dispatch IncrementReal)
+                            Button.content "+"
+                        ]
+                    ]
                 ]
                 TextBlock.create [
                     TextBlock.dock Dock.Top
                     TextBlock.fontSize 48.0
                     TextBlock.verticalAlignment VerticalAlignment.Center
                     TextBlock.horizontalAlignment HorizontalAlignment.Center
-                    TextBlock.text (string state.count)
+                    TextBlock.text (string state.realPart + " + " + string state.imaginaryPart + "i")
                 ]
             ]
-        ]       
+        ]
+        
+     
