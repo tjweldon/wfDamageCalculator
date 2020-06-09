@@ -1,79 +1,75 @@
 ﻿namespace NewApp
 
+open SharpDX.Direct3D11
+open Weapons.Weapons
+
 module Counter =
     open Avalonia.Controls
     open Avalonia.FuncUI.DSL
     open Avalonia.Layout
     
     type State = {
-        realPart : int
-        imaginaryPart: int
+        message: string
+        baseWeapon: Weapon
+        moddedWeapon: Weapon
     }
-    let init = {
-        realPart = 0
-        imaginaryPart = 0
+    
+    let baseWeapon = {
+            attackSpeed = 100.0
+            damage = listToDmg [1.5; 1.7; 69.0]
+        }
+    
+    let init: State = {
+        message = "blah"
+        baseWeapon = baseWeapon
+        moddedWeapon = baseWeapon
     }
 
-    type Msg = IncrementReal | DecrementReal | IncrementImaginary | DecrementImaginary | Reset
-
+    type Msg = IncreaseDamage | Reset
+       
+    let formatDamageMessage (weapon: Weapon): string =
+            "Rate of Fire: " + string weapon.attackSpeed
+            + "\nImpact: " + string weapon.damage.impact
+            + "\nPuncture: " + string weapon.damage.puncture
+            + "\nSlash: " + string weapon.damage.slash
+            + "\n"
+            
+    let stateView (state: State) =
+        formatDamageMessage state.moddedWeapon + state.message
+        
+    let calculate (state: State): State =
+        let total = dps state.moddedWeapon
+        { state with message = string total }
+        
+    let applyDmgIncrease (state: State): State =
+        { state with moddedWeapon = state.moddedWeapon |> (plusDmgPercent 100.0 state.baseWeapon) }
+        
     let update (msg: Msg) (state: State) : State =
         match msg with
-        | IncrementReal -> { state with realPart = state.realPart + 1 }
-        | DecrementReal -> { state with realPart = state.realPart - 1 }
-        | IncrementImaginary -> { state with imaginaryPart = state.imaginaryPart + 1 }
-        | DecrementImaginary -> { state with imaginaryPart = state.imaginaryPart - 1 }
-        | Reset -> init
-    
+        | Reset -> state 
+        | IncreaseDamage -> state |> applyDmgIncrease
+        |> calculate
+        
     let view (state: State) (dispatch) =
+        let message = stateView state
         DockPanel.create [
             DockPanel.children [
                 Button.create [
                     Button.dock Dock.Bottom
                     Button.onClick (fun _ -> dispatch Reset)
-                    Button.content "reset"
+                    Button.content "CALCULATE"
                 ]
-                DockPanel.create [
-                    DockPanel.dock Dock.Bottom
-                    DockPanel.children [
-                        Button.create [
-                            Button.dock Dock.Left
-                            Button.width 200.0
-                            Button.horizontalAlignment HorizontalAlignment.Stretch
-                            Button.onClick (fun _ -> dispatch DecrementImaginary)
-                            Button.content "-i"
-                        ]
-                        Button.create [
-                            Button.dock Dock.Right
-                            Button.horizontalAlignment HorizontalAlignment.Stretch
-                            Button.onClick (fun _ -> dispatch IncrementImaginary)
-                            Button.content "+i"
-                        ]
-                    ]
-                ]
-                DockPanel.create [
-                    DockPanel.dock Dock.Bottom
-                    DockPanel.children [
-                        Button.create [
-                            Button.dock Dock.Left
-                            Button.width 200.0
-                            Button.horizontalAlignment HorizontalAlignment.Stretch
-                            Button.onClick (fun _ -> dispatch DecrementReal)
-                            Button.content "-"
-                        ]
-                        Button.create [
-                            Button.dock Dock.Right
-                            Button.horizontalAlignment HorizontalAlignment.Stretch
-                            Button.onClick (fun _ -> dispatch IncrementReal)
-                            Button.content "+"
-                        ]
-                    ]
+                Button.create [
+                    Button.dock Dock.Bottom
+                    Button.onClick (fun _ -> dispatch IncreaseDamage)
+                    Button.content "INCREASE DAMAGE 100%"
                 ]
                 TextBlock.create [
                     TextBlock.dock Dock.Top
                     TextBlock.fontSize 48.0
                     TextBlock.verticalAlignment VerticalAlignment.Center
                     TextBlock.horizontalAlignment HorizontalAlignment.Center
-                    TextBlock.text (string state.realPart + " + " + string state.imaginaryPart + "i")
+                    TextBlock.text message
                 ]
             ]
         ]
